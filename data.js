@@ -1,5 +1,5 @@
-window.jsonData = function () {
-  return {
+window.jsonData =  {
+  
     header: {
       title: "製 造 指 図 記 録 書",
       docName: "test001",
@@ -656,5 +656,4 @@ window.jsonData = function () {
         ],
       },
     ],
-  };
 };
