@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>PDF Generation Example</title>
+</head>
+<body>
+
+<button onclick="generatePDF()">Generate PDF</button>
+
+<script>
+// Ensure tableCellWidth is defined and contains valid numbers
+const tableCellWidth = [41, 192, 41.5, 191.5]; // Example widths in pixels
+const allContent = [];
+const pdfMakeConfig = {
+       
+          combinedReportDataFontSize: 6.75,
+          combinedReportTitleFontSize: 9,
+          combinedReportSubTitleFontSize: 6.75,
+          combinedReportDocumentInfoFontSize: 4.5,
+          singleReportDocumentInfoFontSize: 6.75,
+          combinedReportImageWidth: 280,
+          combinedReportImageHeight: 220,
+          combinedReportHeaderTableBorderWidth: 0.8,
+          combinedReportHeaderTableBorderColor: "#1a1818",
+          combinedReportBodyTableBorderWidth: 0.8,
+          combinedReportBodyTableBorderColor: "#1a1818",
+          combinedReportDocumentTableBorderWidth: 0.6,
+          combinedReportDocumentTableBorderWidthHorizontal: 0.5,
+          combinedReportDocumentTableBorderColor: "#211212",
+          materialReportHeaderFontSize: 12,
+          materialReportFontSize: 9,
+          imageReportFontSize: 6.75,
+          imageReportHeaderTitle: 9,
+          traceReportHeaderTitle: 9,
+          traceReportDataContent: 7,
+          singleReportDataFontSize: 6.75,
+          singleReportHeaderFontSize: 12,
+      };
+      function formatDateForFilename(date) {
+        const getDate =
+          date.getFullYear().toString() +
+          (date.getMonth() + 1).toString().padStart(2, "0") +
+          date.getDate().toString().padStart(2, "0") +
+          date.getHours().toString().padStart(2, "0") +
+          date.getMinutes().toString().padStart(2, "0") +
+          date.getSeconds().toString().padStart(2, "0");
+        return getDate;
+      }
+      function insertSpaces(text, n = 10) {
+        if (!text || text.trim() === "") {
+          return text;
+        }
+
+        // Helper function to determine if a character is a double byte character
+        function isDoubleByte(char) {
+          // A rough check if a character is double-byte (includes common ranges for Japanese characters)
+          return (
+            encodeURIComponent(char).length > encodeURIComponent("a").length
+          );
+        }
+
+        // Check if string is entirely double-byte characters or pure integers
+        function isPureDoubleByteOrInteger(str) {
+          return [...str].every((ch) => isDoubleByte(ch) || /\d/.test(ch));
+        }
+
+        // Split by spaces and process each word individually
+        if (text.includes(" ")) {
+          const words = text.split(" ");
+          return words
+            .map((word) => {
+              if (!isPureDoubleByteOrInteger(word) && word.length > n) {
+                return word.replace(new RegExp(`(.{${n}})`, "g"), "$1 ");
+              } else {
+                return word;
+              }
+            })
+            .join(" ");
+        } else {
+          // Process the whole text if no spaces are found
+          if (isPureDoubleByteOrInteger(text)) {
+            return text; // Case 1
+          } else {
+            return text.replace(new RegExp(`(.{${n}})`, "g"), "$1 "); // Case 2
+          }
+        }
+      }
+
+      function getValue(key) {
+        return key; // Placeholder for the getValue function
+      }
+function prepareWorkExecutionReportContent(reports, header) {
+  if (reports.length > 0) {
+          reports.forEach((reportData, index) => {
+            allContent.push(
+              {
+                table: {
+                  widths: tableCellWidth, // Log this value
+                  body: [
+                      ...reportData.facilityLot.map((item) => [
+                        {
+                          text: item["0"],
+                          style: "",
+                          fillColor: "#DEEAF6",
+                          margin: [0, 1, 0, 1],
+                          alignment: "center",
+                        },
+                        {
+                          text: item["1"],
+                          style: "",
+                          alignment: "center",
+                          fillColor: "",
+                          margin: [0, 1, 0, 1],
+                        },
+                        {
+                          text: item["2"],
+                          style: "",
+                          fillColor: "#DEEAF6",
+                          margin: [0, 1, 0, 1],
+                          alignment: "center",
+                        },
+                        {
+                          text: item["3"],
+                          style: "",
+                          alignment: "center",
+                          fillColor: "",
+                          margin: [0, 1, 0, 1],
+                        },
+                      ]),
+                  ]
+                },
+                layout: {
+                  hLineWidth: function (i, node) {
+                    return pdfMakeConfig.combinedReportHeaderTableBorderWidth;
+                  },
+                  vLineWidth: function (i, node) {
+                    return pdfMakeConfig.combinedReportHeaderTableBorderWidth;
+                  },
+                  hLineColor: function (i, node) {
+                    return pdfMakeConfig.combinedReportHeaderTableBorderColor;
+                  },
+                  vLineColor: function (i, node) {
+                    return pdfMakeConfig.combinedReportHeaderTableBorderColor;
+                  },
+                },                            
+                margin: [127, 3, 0, 12],
+            }
+          );
+          });
+  }
+}
+function generatePDF() {
+    const data = window.jsonData();
+    const reports = data.workExecutionReport;
+
+    pdfMake.fonts = {
+          ipamp: {
+            normal: "ipamp.ttf",
+            bold: "ipamp.ttf",
+            italics: "ipamp.ttf",
+            bolditalics: "ipamp.ttf",
+          },
+        };
+        // Include Base64 font file
+        pdfMake.vfs["ipamp.ttf"] = getIpampFontBase64();
+
+    if (reports.length > 0) {
+          const header = "Work Execution Report";
+          prepareWorkExecutionReportContent(reports, header);
+        }
+
+    const defaultFontSize = pdfMakeConfig.combinedReportDataFontSize;
+      const docName = "test01";
+      const pageTopmargin = docName.length > 38 ? 130 : 110;
+      const headerTopmargin = docName.length > 38 ? 75 : 75;
+
+    var docDefinition = {
+      pageOrientation: "landscape",
+      pageMargins: [43, pageTopmargin, 30, 30],
+      content: allContent,
+      footer: function (currentPage, pageCount) {
+        return false;
+      },
+      styles: {
+            reportTitle: {
+              fontSize: pdfMakeConfig.combinedReportTitleFontSize,
+              font: "ipamp",
+            },
+            reportTitleSubTable: {
+              fontSize: pdfMakeConfig.combinedReportDocumentInfoFontSize,
+              font: "ipamp",
+              bold: false,
+            },
+            reportDocTitleSubTable: {
+              fontSize: pdfMakeConfig.combinedReportDocumentInfoFontSize,
+              font: "ipamp",
+              bold: false,
+            },
+            tableHeader: {
+              font: "ipamp",
+            },
+            headerText: {
+              bold: true,
+            },
+            underlinedText: {
+              font: "ipamp",
+              decoration: "underline", // Apply text underline
+              decorationStyle: "solid", // Optional: style of the underline (solid, double, dotted, dashed)
+              // decorationColor: '#ddd',  // Optional: color of the underline
+            },
+            traceSeparator: {
+              font: "ipamp",
+            },
+            traceReportText: {
+              // decoration: 'underline',
+              font: "ipamp",
+            },
+            boldStyle: {
+              font: "ipamp",
+              decorationThickness: 1,
+              lineHeight: 1.5,
+            },
+            imageTitleValueText: {
+              font: "ipamp",
+            },
+            documentInfoTable: {
+              font: "ipamp",
+              fontSize: pdfMakeConfig.combinedReportDocumentInfoFontSize,
+            },
+            tableImageHeader: {
+              fontSize: pdfMakeConfig.combinedReportSubTitleFontSize,
+            },
+          },
+          defaultStyle: {
+            font: "ipamp",
+            fontSize: 6.5,
+          },
+    };
+
+    
+        const documentName = 'testdock'
+            // Generate and open the PDF
+            const d = new Date();
+        const formattedDate = formatDateForFilename(d);
+        const filename = `${documentName}-${formattedDate}.pdf`;
+                // pdfMake.createPdf(docDefinition).open();
+
+
+    pdfMake.createPdf(docDefinition).download(filename);
+}
+</script>
+    <!-- <script src="./pdfmake_reports.js"></script> -->
+    <script src="./pdfmake_0.2.18.min.js"></script>
+    <script src="./pdfmake_0.2.12_vfs_fonts.js"></script>
+    <script src="./getBase64Ipamp.js"></script>
+    <script src="./data.js"></script>
+
+</body>
+</html>

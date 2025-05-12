@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PDFMake with Japanese Text</title>
+
+    <script>
+      const tableCellWidth = [41, 192, 41.5, 191.5];
+      const totalTableWidth = tableCellWidth.reduce(
+        (sum, width) => sum + width,
+        0
+      ); // Sum of all cell widths
+      const coverPagePosition = (841.89 - totalTableWidth) / 2; // Center the table horizontally on the landscape page
+
+      const allContent = [];
+
+      const pdfMakeConfig = {
+          combinedReportDataFontSize: 6.75,
+          combinedReportTitleFontSize: 9,
+          combinedReportSubTitleFontSize: 6.75,
+          combinedReportDocumentInfoFontSize: 4.5,
+          singleReportDocumentInfoFontSize: 6.75,
+          combinedReportImageWidth: 280,
+          combinedReportImageHeight: 220,
+          combinedReportHeaderTableBorderWidth: 0.8,
+          combinedReportHeaderTableBorderColor: "#1a1818",
+          combinedReportBodyTableBorderWidth: 0.8,
+          combinedReportBodyTableBorderColor: "#1a1818",
+          combinedReportDocumentTableBorderWidth: 0.6,
+          combinedReportDocumentTableBorderWidthHorizontal: 0.5,
+          combinedReportDocumentTableBorderColor: "#211212",
+          materialReportHeaderFontSize: 12,
+          materialReportFontSize: 9,
+          imageReportFontSize: 6.75,
+          imageReportHeaderTitle: 9,
+          traceReportHeaderTitle: 9,
+          traceReportDataContent: 7,
+          singleReportDataFontSize: 6.75,
+          singleReportHeaderFontSize: 12,
+      };
+
+      function formatDateForFilename(date) {
+        const getDate =
+          date.getFullYear().toString() +
+          (date.getMonth() + 1).toString().padStart(2, "0") +
+          date.getDate().toString().padStart(2, "0") +
+          date.getHours().toString().padStart(2, "0") +
+          date.getMinutes().toString().padStart(2, "0") +
+          date.getSeconds().toString().padStart(2, "0");
+        return getDate;
+      }
+
+      function insertSpaces(text, n = 10) {
+        if (!text || text.trim() === "") {
+          return text;
+        }
+
+        // Helper function to determine if a character is a double byte character
+        function isDoubleByte(char) {
+          // A rough check if a character is double-byte (includes common ranges for Japanese characters)
+          return (
+            encodeURIComponent(char).length > encodeURIComponent("a").length
+          );
+        }
+
+        // Check if string is entirely double-byte characters or pure integers
+        function isPureDoubleByteOrInteger(str) {
+          return [...str].every((ch) => isDoubleByte(ch) || /\d/.test(ch));
+        }
+
+        // Split by spaces and process each word individually
+        if (text.includes(" ")) {
+          const words = text.split(" ");
+          return words
+            .map((word) => {
+              if (!isPureDoubleByteOrInteger(word) && word.length > n) {
+                return word.replace(new RegExp(`(.{${n}})`, "g"), "$1 ");
+              } else {
+                return word;
+              }
+            })
+            .join(" ");
+        } else {
+          // Process the whole text if no spaces are found
+          if (isPureDoubleByteOrInteger(text)) {
+            return text; // Case 1
+          } else {
+            return text.replace(new RegExp(`(.{${n}})`, "g"), "$1 "); // Case 2
+          }
+        }
+      }
+
+      function getValue(key) {
+        return key; // Placeholder for the getValue function
+      }
+
+      const documentName = "test document 01";
+
+      function prepareWorkExecutionReportContent(reports, header) {
+        if (reports.length > 0) {
+          reports.forEach((reportData, index) => {
+            allContent.push(
+              // Section: Facility and Lot
+              {
+                table: {
+                  widths: tableCellWidth,
+                  body: [
+                    ...reportData.facilityLot.map((item) => [
+                      {
+                        text: item["0"],
+                        style: "",
+                        fillColor: "#DEEAF6",
+                        margin: [0, 1, 0, 1],
+                        alignment: "center",
+                      },
+                      {
+                        text: item["1"],
+                        style: "",
+                        alignment: "center",
+                        fillColor: "",
+                        margin: [0, 1, 0, 1],
+                      },
+                      {
+                        text: item["2"],
+                        style: "",
+                        fillColor: "#DEEAF6",
+                        margin: [0, 1, 0, 1],
+                        alignment: "center",
+                      },
+                      {
+                        text: item["3"],
+                        style: "",
+                        alignment: "center",
+                        fillColor: "",
+                        margin: [0, 1, 0, 1],
+                      },
+                    ]),
+                  ],
+                },
+                layout: {
+                  hLineWidth: function (i, node) {
+                    return pdfMakeConfig.combinedReportHeaderTableBorderWidth;
+                  },
+                  vLineWidth: function (i, node) {
+                    return pdfMakeConfig.combinedReportHeaderTableBorderWidth;
+                  },
+                  hLineColor: function (i, node) {
+                    return pdfMakeConfig.combinedReportHeaderTableBorderColor;
+                  },
+                  vLineColor: function (i, node) {
+                    return pdfMakeConfig.combinedReportHeaderTableBorderColor;
+                  },
+                },
+                margin: [127, 3, 0, 12],
+                pageHeaderText: header.title,
+              },
+              // Section: Product|Process|Version|Room
+              {
+                table: {
+                  widths: tableCellWidth,
+                  body: [
+                    ...reportData.product.map((item) => [
+                      {
+                        text: item["0"],
+                        style: "",
+                        fillColor: "#DEEAF6",
+                        margin: [0, 1, 0, 1],
+                        alignment: "center",
+                      },
+                      {
+                        text: item["1"],
+                        style: "",
+                        alignment: "center",
+                        fillColor: "",
+                        margin: [0, 1, 0, 1],
+                      },
+                      {
+                        text: item["2"],
+                        style: "",
+                        fillColor: "#DEEAF6",
+                        margin: [0, 1, 0, 1],
+                        alignment: "center",
+                      },
+                      {
+                        text: item["3"],
+                        style: "",
+                        alignment: "center",
+                        fillColor: "",
+                        margin: [0, 1, 0, 1],
+                      },
+                    ]),
+                  ],
+                },
+                layout: {
+                  hLineWidth: function (i, node) {
+                    return pdfMakeConfig.combinedReportHeaderTableBorderWidth;
+                  },
+                  vLineWidth: function (i, node) {
+                    return pdfMakeConfig.combinedReportHeaderTableBorderWidth;
+                  },
+                  hLineColor: function (i, node) {
+                    return pdfMakeConfig.combinedReportHeaderTableBorderColor;
+                  },
+                  vLineColor: function (i, node) {
+                    return pdfMakeConfig.combinedReportHeaderTableBorderColor;
+                  },
+                },
+                margin: [127, 0, 12, 10],
+              },
+              // Section: Reservation
+              {
+                table: {
+                  widths: tableCellWidth,
+                  body: [
+                    ...reportData.reservation.map((item) => [
+                      {
+                        text: item["0"],
+                        style: "",
+                        fillColor: "#DEEAF6",
+                        margin: [0, 1, 0, 1],
+                        alignment: "center",
+                      },
+                      {
+                        text: item["1"],
+                        style: "",
+                        alignment: "center",
+                        fillColor: "",
+                        margin: [0, 1, 0, 1],
+                      },
+                      {
+                        text: item["2"],
+                        style: "",
+                        fillColor: "#DEEAF6",
+                        margin: [0, 1, 0, 1],
+                        alignment: "center",
+                      },
+                      {
+                        text: item["3"],
+                        style: "",
+                        alignment: "center",
+                        fillColor: "",
+                        margin: [0, 1, 0, 1],
+                      },
+                    ]),
+                  ],
+                },
+                layout: {
+                  hLineWidth: function (i, node) {
+                    return pdfMakeConfig.combinedReportHeaderTableBorderWidth;
+                  },
+                  vLineWidth: function (i, node) {
+                    return pdfMakeConfig.combinedReportHeaderTableBorderWidth;
+                  },
+                  hLineColor: function (i, node) {
+                    return pdfMakeConfig.combinedReportHeaderTableBorderColor;
+                  },
+                  vLineColor: function (i, node) {
+                    return pdfMakeConfig.combinedReportHeaderTableBorderColor;
+                  },
+                },
+                margin: [127, 0, 20, 5],
+              },
+              // Section: Person In Charge
+              {
+                text: getValue("lblPersonInCharge"),
+                style: "",
+                margin: [127, 0, 0, 3],
+              },
+              {
+                table: {
+                  widths: tableCellWidth,
+                  body: [
+                    ...reportData.person.map((item) => [
+                      {
+                        text: item["0"],
+                        style: "",
+                        fillColor: "#DEEAF6",
+                        margin: [0, 4, 0, 4],
+                        alignment: "center",
+                      },
+                      {
+                        text: item["1"],
+                        style: "",
+                        fillColor: "",
+                        margin: [0, 4, 0, 4],
+                      },
+                      {
+                        text: item["2"],
+                        style: "",
+                        fillColor: "#DEEAF6",
+                        margin: [0, 4, 0, 4],
+                        alignment: "center",
+                      },
+                      {
+                        text: item["3"],
+                        style: "",
+                        fillColor: "",
+                        margin: [0, 4, 0, 4],
+                      },
+                    ]),
+                  ],
+                },
+                layout: {
+                  hLineWidth: function (i, node) {
+                    return pdfMakeConfig.combinedReportHeaderTableBorderWidth;
+                  },
+                  vLineWidth: function (i, node) {
+                    return pdfMakeConfig.combinedReportHeaderTableBorderWidth;
+                  },
+                  hLineColor: function (i, node) {
+                    return pdfMakeConfig.combinedReportHeaderTableBorderColor;
+                  },
+                  vLineColor: function (i, node) {
+                    return pdfMakeConfig.combinedReportHeaderTableBorderColor;
+                  },
+                },
+                margin: [127, 0, 0, 5],
+              },
+              // Section: Workers
+              {
+                text: getValue("lblExecutor"),
+                style: "",
+                margin: [127, 0, 0, 3],
+              },
+              {
+                table: {
+                  widths: [143, 190, 140],
+                  body: [
+                    ...reportData.workers.map((item) => [
+                      {
+                        text: item["0"],
+                        style: "",
+                        fillColor: "#DEEAF6",
+                        margin: [0, 1, 0, 1],
+                        alignment: "center",
+                      },
+                      {
+                        text: item["1"],
+                        style: "",
+                        fillColor: "",
+                        margin: [0, 1, 0, 1],
+                        alignment: "center",
+                      },
+                      {
+                        text: item["2"],
+                        style: "",
+                        fillColor: "",
+                        margin: [0, 1, 0, 1],
+                        alignment: "center",
+                      },
+                    ]),
+                  ],
+                },
+                layout: {
+                  hLineWidth: function (i, node) {
+                    return pdfMakeConfig.combinedReportHeaderTableBorderWidth;
+                  },
+                  vLineWidth: function (i, node) {
+                    return pdfMakeConfig.combinedReportHeaderTableBorderWidth;
+                  },
+                  hLineColor: function (i, node) {
+                    return pdfMakeConfig.combinedReportHeaderTableBorderColor;
+                  },
+                  vLineColor: function (i, node) {
+                    return pdfMakeConfig.combinedReportHeaderTableBorderColor;
+                  },
+                },
+                margin: [127, 0, 0, 7], // Center the table vertically
+              },
+              // Section: Note
+              {
+                stack: [
+                  {
+                    text: getValue("lblNote"),
+                    style: "",
+                    margin: [0, 0, 0, 0],
+                  },
+                  {
+                    canvas: [
+                      {
+                        type: "line",
+                        x1: 0,
+                        y1: 0,
+                        x2: 500,
+                        y2: 0,
+                        lineWidth: 0.5,
+                        lineColor: "#ddd",
+                      }, // Horizontal line
+                    ],
+                  },
+                ],
+                margin: [127, 13, 0, 0],
+              },
+              // Adding a page break
+              { text: "", pageBreak: "before" },
+              {
+                table: {
+                  headerRows: 1,
+                  widths: [17, 70, 168, 108, 69, 58, 61, 62, 107], // 9 columns
+                  body: [
+                    [
+                      {
+                        text: getValue("reportLblNo"),
+                        style: "tableHeader",
+                        fillColor: "#A9D08E",
+                        alignment: "center",
+                        margin: [-2, 5, 0, 0],
+                      }, // No.
+                      {
+                        text: getValue("lblItem"),
+                        style: "tableHeader",
+                        fillColor: "#A9D08E",
+                        alignment: "center",
+                        margin: [0, 5, 0, 0],
+                      }, // Item
+                      {
+                        text: getValue("lblWorkProcedure"),
+                        style: "tableHeader",
+                        fillColor: "#A9D08E",
+                        alignment: "center",
+                        margin: [0, 5, 0, 0],
+                      }, // Work Procedure
+                      {
+                        text: getValue("lblItemUsed"),
+                        style: "tableHeader",
+                        fillColor: "#A9D08E",
+                        alignment: "center",
+                        margin: [0, 5, 0, 0],
+                      }, // Item Used
+                      {
+                        text: getValue("lblTaskRemarks"),
+                        style: "tableHeader",
+                        fillColor: "#A9D08E",
+                        alignment: "center",
+                        margin: [0, 5, 0, 0],
+                      }, // Remarks
+                      {
+                        table: {
+                          widths: ["100%"],
+                          body: [
+                            [
+                              {
+                                text: getValue("lblProcessConditions"),
+                                style: "tableHeader",
+                                fillColor: "#5B9BD5",
+                                color: "white",
+                                alignment: "center",
+                              },
+                            ], // Process Condition
+                            [
+                              {
+                                text: getValue("lblInstructions"),
+                                style: "tableHeader",
+                                fillColor: "#FFC300",
+                                alignment: "center",
+                              },
+                            ], // Instruction
+                          ],
+                        },
+                        layout: {
+                          hLineWidth: function (i, node) {
+                            return i === 1
+                              ? pdfMakeConfig.combinedReportBodyTableBorderWidth
+                              : 0; // Only show horizontal line between the rows
+                          },
+                          vLineWidth: function (i, node) {
+                            return 0; // No vertical lines
+                          },
+                          hLineColor: function (i, node) {
+                            return pdfMakeConfig.combinedReportBodyTableBorderColor; // Black color for the horizontal line
+                          },
+                          paddingLeft: function (i, node) {
+                            return 0;
+                          }, // Set padding to 0
+                          paddingRight: function (i, node) {
+                            return 0;
+                          }, // Set padding to 0
+                          paddingTop: function (i, node) {
+                            return 0;
+                          }, // Set padding to 0
+                          paddingBottom: function (i, node) {
+                            return 0;
+                          }, // Set padding to 0
+                        },
+                      },
+                      {
+                        table: {
+                          widths: ["100%"],
+                          body: [
+                            [
+                              {
+                                text: getValue("lblWorkRecord"),
+                                style: "tableHeader",
+                                fillColor: "#5B9BD5",
+                                color: "white",
+                                alignment: "center",
+                              },
+                            ], // Work Record
+                            [
+                              {
+                                text: getValue("lblWorkResults"),
+                                style: "tableHeader",
+                                fillColor: "#FFC300",
+                                alignment: "center",
+                              },
+                            ], // Work Results
+                          ],
+                        },
+                        margin: [0, 0, 0, 0],
+                        layout: {
+                          hLineWidth: function (i, node) {
+                            return i === 1
+                              ? pdfMakeConfig.combinedReportBodyTableBorderWidth
+                              : 0; // Only show horizontal line between the rows
+                          },
+                          vLineWidth: function (i, node) {
+                            return 0; // No vertical lines
+                          },
+                          hLineColor: function (i, node) {
+                            return pdfMakeConfig.combinedReportBodyTableBorderColor; // Black color for the horizontal line
+                          },
+                          paddingLeft: function (i, node) {
+                            return 0;
+                          }, // Set padding to 0
+                          paddingRight: function (i, node) {
+                            return 0;
+                          }, // Set padding to 0
+                          paddingTop: function (i, node) {
+                            return 0;
+                          }, // Set padding to 0
+                          paddingBottom: function (i, node) {
+                            return 0;
+                          }, // Set padding to 0
+                        },
+                      },
+                      {
+                        table: {
+                          widths: ["100%"],
+                          body: [
+                            [
+                              {
+                                text: getValue("lblEndDateTime"),
+                                style: "tableHeader",
+                                fillColor: "#0091ff",
+                                color: "white",
+                                alignment: "center",
+                              },
+                            ], // End Date and Time
+                            [
+                              {
+                                text: getValue("lblResult"),
+                                style: "tableHeader",
+                                fillColor: "#0091ff",
+                                color: "white",
+                                alignment: "center",
+                              },
+                            ], // Result
+                          ],
+                        },
+                        margin: [0, 0, 0, 0],
+                        layout: {
+                          hLineWidth: function (i, node) {
+                            return i === 1
+                              ? pdfMakeConfig.combinedReportBodyTableBorderWidth
+                              : 0; // Only show horizontal line between the rows
+                          },
+                          vLineWidth: function (i, node) {
+                            return 0; // No vertical lines
+                          },
+                          hLineColor: function (i, node) {
+                            return pdfMakeConfig.combinedReportBodyTableBorderColor; // Black color for the horizontal line
+                          },
+                          paddingLeft: function (i, node) {
+                            return 0;
+                          }, // Set padding to 0
+                          paddingRight: function (i, node) {
+                            return 0;
+                          }, // Set padding to 0
+                          paddingTop: function (i, node) {
+                            return 0;
+                          }, // Set padding to 0
+                          paddingBottom: function (i, node) {
+                            return 0;
+                          }, // Set padding to 0
+                        },
+                      },
+                      {
+                        text: getValue("lblRemarks"),
+                        style: "tableHeader",
+                        fillColor: "#0091ff",
+                        color: "white",
+                        alignment: "center",
+                        margin: [0, 5, 0, 0],
+                      }, // Remarks
+                    ],
+                    ...reportData.dataContent.map((item) => [
+                      {
+                        text: item["No."],
+                        style: "",
+                        fillColor: item["grayedOut"],
+                        margin: [0, 2, 0, 0],
+                        lineHeight: 1.5,
+                      },
+                      {
+                        text: insertSpaces(item["Item"], 14),
+                        style: "",
+                        fillColor: item["grayedOut"],
+                        margin: [0, 2, 0, 0],
+                            lineHeight: 1.5,
+                      },
+                      {
+                        text: insertSpaces(item["Work Procedure"], 32),
+                        style: "",
+                        fillColor: item["grayedOut"],
+                        margin: [0, 2, 0, 0],
+                          lineHeight: 1.5,
+                      },
+                      {
+                        text: insertSpaces(item["Item Used"], 19),
+                        style: "",
+                        fillColor: item["grayedOut"],
+                        margin: [0, 2, 0, 0],
+                        lineHeight: 1.5,
+                      },
+                      {
+                        text: insertSpaces(item["Remarks"], 16),
+                        style: "",
+                        fillColor: item["grayedOut"],
+                        margin: [0, 2, 0, 0],
+                      lineHeight: 1.5,
+                      },
+                      {
+                        table: {
+                          widths: [59.5, 59.5],
+                          body: item["Combined"]
+                            ? item["Combined"].flatMap((itm, index, array) => [
+                                [
+                                  {
+                                    text: insertSpaces(itm["a"], 20),
+                                    margin: [2, 0, 3, 2],
+                                lineHeight: 1.5,
+                                  },
+                                  { text: itm["b"], margin: [2, 0, 0, 4],
+                                    lineHeight: 1.5,
+                                  },
+                                ],
+                                ...(index < array.length - 1
+                                  ? [
+                                      [
+                                        {
+                                          colSpan: 2,
+                                          margin: [0, 0.5, 0, 0],
+                                          canvas: [
+                                            {
+                                              type: "line",
+                                              x1: 0,
+                                              y1: 0,
+                                              x2: 120,
+                                              y2: 0,
+                                              lineWidth:
+                                                pdfMakeConfig.combinedReportBodyTableBorderWidth,
+                                              lineColor:
+                                                pdfMakeConfig.combinedReportBodyTableBorderColor,
+                                            },
+                                          ],
+                                        },
+                                        {}, // Empty cell for colSpan
+                                      ],
+                                    ]
+                                  : []),
+                              ])
+                            : [], // Ensure rawGeneralMaterials exists and map over it
+                        },
+                        layout: {
+                          hLineWidth: function (i, node) {
+                            return 0;
+                          }, // Main table horizontal line width
+                          vLineWidth: function (i, node) {
+                            return 0;
+                          }, // Main table vertical line width
+                          paddingLeft: function (i, node) {
+                            return 0;
+                          },
+                          paddingRight: function (i, node) {
+                            return 0;
+                          },
+                          paddingTop: function (i, node) {
+                            return 0;
+                          },
+                          paddingBottom: function (i, node) {
+                            return 0;
+                          },
+                        },
+                        fillColor: item["grayedOut"],
+                        //layout: "lightHorizontalLines",
+                      },
+                      { text: "", fillColor: item["grayedOut"] },
+                      {
+                        table: {
+                          widths: [52], // 2 equal columns
+                          body: [
+                            [
+                              {
+                                text: item["End Date and Time"],
+                                style: "tableRow",
+                                margin: [0, 2, 0, 0],
+                        lineHeight: 1.5,
+                              },
+                            ],
+                            [
+                              {
+                                text: item["Result"],
+                                style: "tableRow",
+                                color: "blue",
+                                margin: [0, 2, 0, 0],
+                      lineHeight: 1.5,
+                              },
+                            ],
+                          ],
+                        },
+                        layout: {
+                          hLineWidth: function (i, node) {
+                            return i === 1
+                              ? pdfMakeConfig.combinedReportBodyTableBorderWidth
+                              : 0; // Only show horizontal line between the rows
+                          },
+                          vLineWidth: function (i, node) {
+                            return 0; // No vertical lines
+                          },
+                          hLineColor: function (i, node) {
+                            return pdfMakeConfig.combinedReportBodyTableBorderColor; // Black color for the horizontal line
+                          },
+                          paddingLeft: function (i, node) {
+                            return 5;
+                          },
+                          paddingRight: function (i, node) {
+                            return 5;
+                          },
+                          paddingTop: function (i, node) {
+                            return 0;
+                          },
+                          paddingBottom: function (i, node) {
+                            return 0;
+                          },
+                        },
+                        fillColor: item["grayedOut"],
+                      },
+                      {
+                        text: insertSpaces(item["Others"], 25),
+                        style: "",
+                        fillColor: item["grayedOut"],
+                        margin: [0, 2, 0, 0],
+            lineHeight: 1.5,
+                      },
+                    ]),
+                  ],
+                },
+                layout: {
+                  hLineWidth: function () {
+                    return pdfMakeConfig.combinedReportBodyTableBorderWidth;
+                  },
+                  vLineWidth: function () {
+                    return pdfMakeConfig.combinedReportBodyTableBorderWidth;
+                  },
+                  hLineColor: function (i, node) {
+                    return pdfMakeConfig.combinedReportBodyTableBorderColor;
+                  },
+                  vLineColor: function (i, node) {
+                    return pdfMakeConfig.combinedReportBodyTableBorderColor;
+                  },
+                  paddingLeft: function (i, node) {
+                    return i === 5 || i === 6 || i === 7 ? 0 : 5;
+                    // return 0;
+                  },
+                  paddingRight: function (i, node) {
+                    return 0;
+                  },
+                  paddingTop: function (i, node) {
+                    return 0;
+                  },
+                  paddingBottom: function (i, node) {
+                    return 0;
+                  },
+                },
+                margin: [0, 0, 0, 0],
+              }
+            );
+            if (index < reports.length - 1) {
+              allContent.push({ text: "", pageBreak: "before" });
+            }
+          });
+        }
+      }
+
+      function generateReportUsingPdfMake() {
+        const data = window.jsonData();
+        const reports = data.workExecutionReport;
+        // response, documentName
+
+        pdfMake.fonts = {
+          ipamp: {
+            normal: "ipamp.ttf",
+            bold: "ipamp.ttf",
+            italics: "ipamp.ttf",
+            bolditalics: "ipamp.ttf",
+          },
+        };
+        // Include Base64 font file
+        pdfMake.vfs["ipamp.ttf"] = getIpampFontBase64();
+        // Work Execution Report------------------------------
+        if (reports.length > 0) {
+          const header = "Work Execution Report";
+          prepareWorkExecutionReportContent(reports, header);
+        }
+
+        console.log(allContent);
+
+        const defaultFontSize = pdfMakeConfig.combinedReportDataFontSize;
+        const docName = "test01";
+        const pageTopmargin = docName.length > 38 ? 130 : 110;
+        const headerTopmargin = docName.length > 38 ? 75 : 75;
+        // Define the document
+        const docDefinition = {
+          pageOrientation: "landscape",
+          pageMargins: [43, pageTopmargin, 30, 30],
+          content: allContent,
+          footer: function (currentPage, pageCount) {
+            return false;
+          },
+          styles: {
+            reportTitle: {
+              fontSize: pdfMakeConfig.combinedReportTitleFontSize,
+              font: "ipamp",
+            },
+            reportTitleSubTable: {
+              fontSize: pdfMakeConfig.combinedReportDocumentInfoFontSize,
+              font: "ipamp",
+              bold: false,
+            },
+            reportDocTitleSubTable: {
+              fontSize: pdfMakeConfig.combinedReportDocumentInfoFontSize,
+              font: "ipamp",
+              bold: false,
+            },
+            tableHeader: {
+              font: "ipamp",
+            },
+            headerText: {
+              bold: true,
+            },
+            underlinedText: {
+              font: "ipamp",
+              decoration: "underline", // Apply text underline
+              decorationStyle: "solid", // Optional: style of the underline (solid, double, dotted, dashed)
+              // decorationColor: '#ddd',  // Optional: color of the underline
+            },
+            traceSeparator: {
+              font: "ipamp",
+            },
+            traceReportText: {
+              // decoration: 'underline',
+              font: "ipamp",
+            },
+            boldStyle: {
+              font: "ipamp",
+              decorationThickness: 1,
+              lineHeight: 1.5,
+            },
+            imageTitleValueText: {
+              font: "ipamp",
+            },
+            documentInfoTable: {
+              font: "ipamp",
+              fontSize: pdfMakeConfig.combinedReportDocumentInfoFontSize,
+            },
+            tableImageHeader: {
+              fontSize: pdfMakeConfig.combinedReportSubTitleFontSize,
+            },
+          },
+          defaultStyle: {
+            font: "ipamp",
+            fontSize: defaultFontSize,
+          },
+        };
+
+        docDefinition.header = function (currentPage, pageCount) {
+          let pageHeader = {
+            table: {
+              widths: [220.6, 340.8, 245.6], // Adjust column widths
+              body: [
+                [
+                  { text: "", style: "" },
+                  {
+                    text: "",
+                    alignment: "center",
+                    style: "reportTitle",
+                    layout: "noBorders",
+                  },
+                  {
+                    table: {
+                      widths: [32.52, 40.67, 20.89, 20.52],
+                      body: [
+                        [
+                          {
+                            text: getValue("lblReportDocumentNumber"),
+                            style: "documentInfoTable",
+                          },
+                          {
+                            text: "test01",
+                            style: "documentInfoTable",
+                            colSpan: 3,
+                            margin: [1, 1, 5, 1],
+                          },
+                          {},
+                          {}, // Empty cells to span
+                        ],
+                        [
+                          {
+                            text: getValue("lblReportLotNo"),
+                            style: "documentInfoTable",
+                          },
+                          { text: "BMS_001", style: "documentInfoTable" },
+                          {
+                            text: getValue("lblReportPageNo"),
+                            style: "documentInfoTable",
+                          },
+                          {
+                            text: `${currentPage}/${pageCount}`,
+                            style: "documentInfoTable",
+                          },
+                        ],
+                      ],
+                    },
+                    margin: [59, 0, 0, 0],
+                    layout: {
+                      hLineWidth: function () {
+                        return pdfMakeConfig.combinedReportDocumentTableBorderWidthHorizontal;
+                      },
+                      vLineWidth: function () {
+                        return pdfMakeConfig.combinedReportDocumentTableBorderWidth;
+                      },
+                      hLineColor: function (i, node) {
+                        return pdfMakeConfig.combinedReportDocumentTableBorderColor;
+                      },
+                      vLineColor: function (i, node) {
+                        return pdfMakeConfig.combinedReportDocumentTableBorderColor;
+                      },
+                    },
+                  },
+                ],
+              ],
+            },
+            margin: [30, headerTopmargin, 30, 0], // Adjust header margins [left, top, right, bottom]
+            layout: {
+              hLineWidth: function (i, node) {
+                return 0;
+              }, // Main table horizontal line width
+              vLineWidth: function (i, node) {
+                return 0;
+              }, // Main table vertical line width
+              paddingLeft: function (i, node) {
+                return 0;
+              },
+              paddingRight: function (i, node) {
+                return 0;
+              },
+              paddingTop: function (i, node) {
+                return 0;
+              },
+              paddingBottom: function (i, node) {
+                return 0;
+              },
+            },
+          };
+          //Dynamically find the header title based on content
+          for (var l = 0; l < docDefinition.content.length; l++) {
+            if (
+              docDefinition.content[l].pageHeaderText &&
+              currentPage >= docDefinition.content[l].positions[0].pageNumber
+            ) {
+              pageHeader.table.body[0][1].text =
+                docDefinition.content[l].pageHeaderText;
+            }
+          }
+
+          return pageHeader;
+        };
+
+        // Generate and open the PDF
+        const d = new Date();
+        const formattedDate = formatDateForFilename(d);
+        const filename = `${documentName}-${formattedDate}.pdf`;
+        console.log(docDefinition);
+        pdfMake.createPdf(docDefinition).open();
+        // pdfMake.createPdf(docDefinition).download(filename);
+      }
+    </script>
+  </head>
+
+  <body>
+    <h1>PDFMake with Japanese Text</h1>
+    <button onclick="generateReportUsingPdfMake()">Generate PDF</button>
+
+    <!-- <script src="./pdfmake_reports.js"></script> -->
+    <script src="./pdfmake_0.2.18.min.js"></script>
+    <script src="./pdfmake_0.2.12_vfs_fonts.js"></script>
+    <script src="./getBase64Ipamp.js"></script>
+    <script src="./data.js"></script>
+  </body>
+</html>
