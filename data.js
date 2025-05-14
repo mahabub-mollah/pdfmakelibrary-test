@@ -29,10 +29,10 @@ window.jsonData = function () {
           ],
         ],
         person: [
-          ["Approver", "BIOMEDICA SOLUTION", "Conformer", "BIOMEDICA SOLUTION"],
+          ["Approver", "Test User", "Conformer", "Test Customer"],
         ],
         workers: [
-          ["BIOMEDICA SOLUTION", "", ""],
+          ["Test User", "", ""],
           ["労働者1", "", ""],
           ["労働者２", "", ""],
           ["Ｗｏｒｋｅｒ　３", "", ""],
