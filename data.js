@@ -3,12 +3,12 @@ window.jsonData = function () {
     header: {
       title: "製 造 指 図 記 録 書",
       docName: "test001",
-      lotCode: "C_RACT_20220901_01",
+      lotCode: "Lot_test",
     },
     workExecutionReport: [
       {
         facilityLot: [
-          ["Facility Code", "C_RACT", "Lot No", "C_RACT_20220901_01"],
+          ["Facility Code", "Test Code", "Lot No", "Test_lot"],
         ],
         product: [
           ["Product Name", "PBMC_凍結品", "Product No", "003"],
