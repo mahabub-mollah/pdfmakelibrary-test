@@ -992,8 +992,8 @@
         const formattedDate = formatDateForFilename(d);
         const filename = `${documentName}-${formattedDate}.pdf`;
         console.log(docDefinition);
-        pdfMake.createPdf(docDefinition).open();
-        // pdfMake.createPdf(docDefinition).download(filename);
+        // pdfMake.createPdf(docDefinition).open();
+        pdfMake.createPdf(docDefinition).download(filename);
       }
     </script>
   </head>
