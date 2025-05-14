@@ -993,6 +993,7 @@
         const filename = `${documentName}-${formattedDate}.pdf`;
         console.log(docDefinition);
         // pdfMake.createPdf(docDefinition).open();
+        allContent = []; // Clear allContent for the next report
         pdfMake.createPdf(docDefinition).download(filename);
       }
     </script>
